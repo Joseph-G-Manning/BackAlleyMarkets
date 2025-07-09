@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "SdhIvQhf+qs=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\jgman\\PersonalProject\\BackAlleyMarkets\\BackAlleyMarketsApi\\src\\BackAlleyMarketsApi\\BackAlleyMarketsApi.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\jgman\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.0\\microsoft.aspnetcore.openapi.9.0.0.nupkg.sha512",
+    "C:\\Users\\jgman\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
