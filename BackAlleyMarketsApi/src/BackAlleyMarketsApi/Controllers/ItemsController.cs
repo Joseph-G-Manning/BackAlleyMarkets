@@ -3,9 +3,12 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.OpenApi.Any;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace BackAlleyMarketsApi.Controllers;
 
+[Route("api/[controller]")]
 [ApiController]
 public class ItemsController : ControllerBase
 {
@@ -16,8 +19,8 @@ public class ItemsController : ControllerBase
         _configuration = configuration;
     }
 
-    [HttpGet("get_items")]
-    public JsonResult get_items()
+    [HttpGet]
+    public JsonResult GetItems()
     {
         string query = "select * from Item";
         DataTable table = new DataTable();
@@ -35,6 +38,46 @@ public class ItemsController : ControllerBase
 
         return new JsonResult(table);
     }
+
+    [HttpGet("{id}")]
+    public JsonResult GetItems(int id)
+    {
+        string query = "select * from Item WHERE ItemId=" + id;
+        DataTable table = new DataTable();
+        string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
+        SqlDataReader myReader;
+        using (SqlConnection myCon = new SqlConnection(SqlDatasource))
+        {
+            myCon.Open();
+            using (SqlCommand myCommand = new SqlCommand(query, myCon))
+            {
+                myReader = myCommand.ExecuteReader();
+                table.Load(myReader);
+            }
+        }
+
+        return new JsonResult(table);
+    }
+
+    // [HttpGet("get_items")]
+    // public JsonResult get_items()
+    // {
+    //     string query = "select * from Item";
+    //     DataTable table = new DataTable();
+    //     string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
+    //     SqlDataReader myReader;
+    //     using (SqlConnection myCon = new SqlConnection(SqlDatasource))
+    //     {
+    //         myCon.Open();
+    //         using (SqlCommand myCommand = new SqlCommand(query, myCon))
+    //         {
+    //             myReader = myCommand.ExecuteReader();
+    //             table.Load(myReader);
+    //         }
+    //     }
+
+    //     return new JsonResult(table);
+    // }
 
     // [HttpPost("add_pizza/{pizzaName}/{toppings}")]
     // public JsonResult add_pizza(string pizzaName, string toppings)
@@ -95,4 +138,6 @@ public class ItemsController : ControllerBase
 
     //     return new JsonResult("Deleted Successfully");
     // }
+
+
 }
