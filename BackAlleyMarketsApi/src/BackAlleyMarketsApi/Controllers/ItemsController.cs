@@ -22,7 +22,7 @@ public class ItemsController : ControllerBase
     [HttpGet]
     public JsonResult GetItems()
     {
-        string query = "select * from Item";
+        string query = "SELECT ItemId, ItemName, Description, Item.CategoryId, CategoryName FROM Item LEFT JOIN Category ON Item.CategoryId = Category.CategoryId;";
         DataTable table = new DataTable();
         string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
         SqlDataReader myReader;
@@ -42,7 +42,7 @@ public class ItemsController : ControllerBase
     [HttpGet("{id}")]
     public JsonResult GetItems(int id)
     {
-        string query = "select * from Item WHERE ItemId=" + id;
+        string query = "select ItemId, ItemName, Description, Item.CategoryId, CategoryName from Item LEFT JOIN Category ON Item.CategoryId = Category.CategoryId WHERE ItemId=" + id;
         DataTable table = new DataTable();
         string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
         SqlDataReader myReader;
