@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Any;
 using Microsoft.AspNetCore.Http.HttpResults;
+using BackAlleyMarketsApi.Models;
 
 namespace BackAlleyMarketsApi.Controllers;
 
@@ -20,23 +21,88 @@ public class ItemsController : ControllerBase
     }
 
     [HttpGet]
-    public JsonResult GetItems()
+    // public JsonResult GetItems()
+    // {
+    //     string query = "SELECT ItemId, ItemName, Description, Item.CategoryId, CategoryName FROM Item LEFT JOIN Category ON Item.CategoryId = Category.CategoryId;";
+    //     DataTable table = new DataTable();
+    //     string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
+    //     SqlDataReader myReader;
+    //     using (SqlConnection myCon = new SqlConnection(SqlDatasource))
+    //     {
+    //         myCon.Open();
+    //         using (SqlCommand myCommand = new SqlCommand(query, myCon))
+    //         {
+    //             myReader = myCommand.ExecuteReader();
+    //             table.Load(myReader);
+    //         }
+    //     }
+
+    //     return new JsonResult(table);
+    // }
+
+    public List<Item> GetItems()
     {
-        string query = "SELECT ItemId, ItemName, Description, Item.CategoryId, CategoryName FROM Item LEFT JOIN Category ON Item.CategoryId = Category.CategoryId;";
-        DataTable table = new DataTable();
-        string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
-        SqlDataReader myReader;
-        using (SqlConnection myCon = new SqlConnection(SqlDatasource))
+        string? connectionString = _configuration.GetConnectionString("BackAlleyMarkets");
+        List<Item> items = new List<Item>();
+
+        using (SqlConnection conn = new SqlConnection(connectionString))
         {
-            myCon.Open();
-            using (SqlCommand myCommand = new SqlCommand(query, myCon))
+            SqlCommand cmdItem = new SqlCommand("SELECT ItemId, ItemName, Description, Item.CategoryId, CategoryName FROM Item LEFT JOIN Category ON Item.CategoryId = Category.CategoryId;", conn);
+            SqlCommand cmdTag = new SqlCommand("SELECT Item_Tag.ItemTagId, Item_Tag.ItemId, Item_Tag.TagId, Tag.TagName FROM Item_Tag FULL OUTER JOIN Item ON Item_Tag.ItemId = Item.ItemId FULL OUTER JOIN Tag ON Item_Tag.TagId = Tag.TagId;", conn);
+            conn.Open();
+
+            SqlDataReader readerTag = cmdTag.ExecuteReader();
+            List<ItemTag> tempTagList = new List<ItemTag>();
+            while (readerTag.Read())
             {
-                myReader = myCommand.ExecuteReader();
-                table.Load(myReader);
+                // if (readerTag.GetInt32(1) == item.ItemId)
+                // {
+                ItemTag itemTag = new ItemTag();
+                itemTag.ItemTagId = readerTag.GetInt32(0);
+                itemTag.ItemId = readerTag.GetInt32(1);
+                itemTag.TagId = readerTag.GetInt32(2);
+                itemTag.TagName = readerTag.GetString(3);
+                tempTagList.Add(itemTag);
+                // }
             }
+            readerTag.Close();
+
+            SqlDataReader readerItem = cmdItem.ExecuteReader();
+            while (readerItem.Read())
+            {
+                Item item = new Item();
+                item.ItemId = readerItem.GetInt32(0); // Assuming Id is the first column
+                item.ItemName = readerItem.GetString(1);
+                item.Description = readerItem.GetString(2);
+                item.CategoryId = readerItem.GetInt32(3);
+                item.CategoryName = readerItem.GetString(4);
+                foreach (var tag in tempTagList)
+                {
+                    if (tag.ItemId == item.ItemId)
+                    {
+                        item.Tags.Add(tag);
+                    }
+                }
+                // while (readerTag.Read())
+                // {
+                //     if (readerTag.GetInt32(1) == item.ItemId)
+                //     {
+                //         ItemTag itemTag = new ItemTag();
+                //         itemTag.ItemTagId = readerTag.GetInt32(0);
+                //         itemTag.ItemId = readerTag.GetInt32(1);
+                //         itemTag.TagId = readerTag.GetInt32(2);
+                //         itemTag.TagName = readerTag.GetString(3);
+                //         item.Tags.Add(itemTag);
+                //     }
+                // }
+                items.Add(item);
+            }
+
+            readerItem.Close();
+
         }
 
-        return new JsonResult(table);
+        return items;
     }
 
     [HttpGet("{id}")]
