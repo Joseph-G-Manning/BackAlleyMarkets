@@ -5,6 +5,16 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+  
+  async  function getItems() {
+    try {
+      const res = await fetch('http://localhost:5142/api/Items/');
+      const data = await res.json();
+      console.log(data);
+    } catch (error) {
+      console.error('Error fetching data: ', error)
+    }
+  }
 
   return (
     <>
@@ -28,6 +38,11 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
+      <div className="card">
+        <button onClick={() => getItems()}>
+          Click for Items
+        </button>
+      </div>
     </>
   )
 }
