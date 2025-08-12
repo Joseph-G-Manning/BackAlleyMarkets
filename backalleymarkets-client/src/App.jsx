@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { BrowserRouter as Router, Route, Routes } from 'react-router';
 import "./App.css";
 import Inventory from "./inventory/inventory";
+// import reactLogo from "./assets/react.svg";
+// import viteLogo from "/vite.svg";
 
 function App() {
-  const [count, setCount] = useState(0);
+  // const [count, setCount] = useState(0);
   // const [items, setItems] = useState([]);
 
   // useEffect(() => {
@@ -49,8 +50,9 @@ function App() {
 
   return (
     <>
-      <h1>Back Alley Markets</h1>
-      {/* <div className="card">
+      <Router>
+        <h1>Back Alley Markets</h1>
+        {/* <div className="card">
         <button
           className="bg-indigo-500 hover:bg-fuchsia-500 rotate-45"
           onClick={() => getItems()}
@@ -63,7 +65,15 @@ function App() {
           ))}
         </div>
       </div> */}
-      <Inventory />
+        <div className="container">
+          <Routes>
+            <Route index element={<Inventory />} />
+            {/* <Route exact path="/item/:username" component={Profile} /> */}
+            {/* <Route component={NoMatch} /> */}
+          </Routes>
+        </div>
+        {/* <Inventory /> */}
+      </Router>
     </>
   );
 }

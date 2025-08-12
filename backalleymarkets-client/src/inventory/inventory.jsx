@@ -47,7 +47,7 @@ function Inventory() {
         </button>
         <div className="grid grid-cols-4 gap-4">
           {items.map((item) => (
-            <a href={"/" + item.itemId}>
+            <a key={item.itemId} href={"/" + item.itemId}>
               <div key={item.itemId}>{item.itemName}</div>
             </a>
           ))}
