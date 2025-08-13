@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from 'react-router';
 import "./App.css";
 import Inventory from "./inventory/inventory";
+import ItemDetail from "./itemDetail/itemDetail";
 // import reactLogo from "./assets/react.svg";
 // import viteLogo from "/vite.svg";
 
@@ -68,6 +69,7 @@ function App() {
         <div className="container">
           <Routes>
             <Route index element={<Inventory />} />
+            <Route path="/items/:id" element={<ItemDetail />} />
             {/* <Route exact path="/item/:username" component={Profile} /> */}
             {/* <Route component={NoMatch} /> */}
           </Routes>

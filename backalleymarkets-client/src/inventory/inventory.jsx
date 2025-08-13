@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "./inventory.css";
+import { useParams, Link } from "react-router";
 
 function Inventory() {
   const [items, setItems] = useState([]);
+
+//   const itemToPass = {
+//     itemName: '',
+//     itemId: null
+//   }
+
+  let { itemId } = useParams();
 
   useEffect(() => {
     const initGetItems = async () => {
@@ -47,9 +55,9 @@ function Inventory() {
         </button>
         <div className="grid grid-cols-4 gap-4">
           {items.map((item) => (
-            <a key={item.itemId} href={"/" + item.itemId}>
+            <Link key={item.itemId} to={"/items/" + item.itemId} state={item}>
               <div key={item.itemId}>{item.itemName}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
