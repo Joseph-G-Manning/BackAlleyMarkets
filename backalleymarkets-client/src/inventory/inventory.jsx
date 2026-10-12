@@ -20,7 +20,7 @@ function Inventory() {
         console.log("Returnded data: ", data);
         console.log("Items before: ", items);
 
-        setItems(data);
+        setItems([]);
         console.log("Items after: ", items);
       } catch (error) {
         console.error("Error fetching data: ", error);
@@ -37,7 +37,7 @@ function Inventory() {
       console.log("Returnded data: ", data);
       console.log("Items before: ", items);
 
-      setItems([]);
+      setItems(data);
       console.log("Items after: ", items);
     } catch (error) {
       console.error("Error fetching data: ", error);
