@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from 'react-router';
+import { BrowserRouter as Router, Route, Routes } from "react-router";
 import "./App.css";
 import Inventory from "./inventory/inventory";
 import ItemDetail from "./itemDetail/itemDetail";
+import AddItem from "./itemManagement/addItem/addItem";
 // import reactLogo from "./assets/react.svg";
 // import viteLogo from "/vite.svg";
 
@@ -53,28 +54,13 @@ function App() {
     <>
       <Router>
         <h1>Back Alley Markets</h1>
-        {/* <div className="card">
-        <button
-          className="bg-indigo-500 hover:bg-fuchsia-500 rotate-45"
-          onClick={() => getItems()}
-        >
-          Click for Items
-        </button>
-        <div className="grid grid-cols-4 gap-4">
-          {items.map((item) => (
-            <div key={item.itemId}>{item.itemName}</div>
-          ))}
-        </div>
-      </div> */}
         <div className="container">
           <Routes>
             <Route index element={<Inventory />} />
             <Route path="/items/:id" element={<ItemDetail />} />
-            {/* <Route exact path="/item/:username" component={Profile} /> */}
-            {/* <Route component={NoMatch} /> */}
+            <Route path="/addItem" element={<AddItem />} />
           </Routes>
         </div>
-        {/* <Inventory /> */}
       </Router>
     </>
   );
