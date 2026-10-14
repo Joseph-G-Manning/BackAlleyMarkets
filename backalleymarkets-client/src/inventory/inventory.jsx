@@ -54,7 +54,7 @@ function Inventory() {
     <>
       <div className="card">
         <button
-          className="bg-indigo-500 hover:bg-fuchsia-500"
+          className="bg-sky-500"
           onClick={() => getItems()}
         >
           Click for Items

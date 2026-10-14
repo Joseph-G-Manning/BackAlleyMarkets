@@ -10,30 +10,33 @@ const AddItem = () => {
   const navItemList = () => {
     navigate("/");
   };
-  // const {itemName} = useParams();
-
-  //   const [item, setItem] = useState("");
-
-  //   useEffect(() => {
-  //       const initGetItem = async () => {
-  //         try {
-  //           const res = await fetch("http://localhost:5142/api/Items/");
-  //           const data = await res.json();
-
-  //           setItem(data);
-  //           console.log("Items after: ", items);
-  //         } catch (error) {
-  //           console.error("Error fetching data: ", error);
-  //         }
-  //       };
-
-  //       initGetItems();
-  //     }, []);
 
   return (
     <>
       <div className="card">
         <h3>Add New Item</h3>
+        <div>
+          <label htmlFor="itemName">Item Name:</label>
+          <input
+            type="text"
+            class="invalid:border-pink-500 invalid:text-pink-600 focus:border-sky-500 focus:outline focus:outline-sky-500 focus:invalid:border-pink-500 focus:invalid:outline-pink-500 disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:shadow-none dark:disabled:border-gray-700 dark:disabled:bg-gray-800/20 ..."
+          />
+        </div>
+        <div>
+          <label htmlFor="itemCategory">Item Category:</label>
+          <input
+            type="text"
+            class="invalid:border-pink-500 invalid:text-pink-600 focus:border-sky-500 focus:outline focus:outline-sky-500 focus:invalid:border-pink-500 focus:invalid:outline-pink-500 disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:shadow-none dark:disabled:border-gray-700 dark:disabled:bg-gray-800/20 ..."
+          />
+        </div>
+                <div>
+          <label htmlFor="tags">Tags:</label>
+          <input
+            type="text"
+            class="invalid:border-pink-500 invalid:text-pink-600 focus:border-sky-500 focus:outline focus:outline-sky-500 focus:invalid:border-pink-500 focus:invalid:outline-pink-500 disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:shadow-none dark:disabled:border-gray-700 dark:disabled:bg-gray-800/20 ..."
+          />
+        </div>
+
         <button
           className="bg-indigo-500 hover:bg-fuchsia-500"
           onClick={navItemList}
