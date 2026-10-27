@@ -11,19 +11,19 @@ using System.Text.Json;
 namespace BackAlleyMarketsApi.Controllers;
 
 // public record ItemDto(string ItemName, string ItemDescription, string CategoryName);
-public class CreateItemRequest
-{
-    public string ItemName { get; set; } = string.Empty;
-    public string ItemDescription { get; set; } = string.Empty;
-    public string CategoryName { get; set; } = string.Empty;
-    public List<string> ItemTags { get; set; } = new();
-}
+// public class CreateItemRequest
+// {
+//     public string ItemName { get; set; } = string.Empty;
+//     public string ItemDescription { get; set; } = string.Empty;
+//     public string CategoryName { get; set; } = string.Empty;
+//     public List<string> ItemTags { get; set; } = new();
+// }
 
-public class TagResponse
-{
-    public int TagId { get; set; }
-    public string TagName { get; set; } = string.Empty;
-}
+// public class TagResponse
+// {
+//     public int TagId { get; set; }
+//     public string TagName { get; set; } = string.Empty;
+// }
 
 [Route("api/[controller]")]
 [ApiController]
@@ -31,10 +31,12 @@ public class ItemsController : ControllerBase
 {
     private readonly string _connectionString;
     private IConfiguration _configuration;
+    private readonly IItemRepository _items;
 
-    public ItemsController(IConfiguration configuration)
+    public ItemsController(IConfiguration configuration, IItemRepository items)
     {
         _configuration = configuration;
+        _items = items;
         _connectionString = _configuration.GetConnectionString("BackAlleyMarkets")
             ?? throw new InvalidOperationException("Missing connection string.");
     }
@@ -167,130 +169,148 @@ public class ItemsController : ControllerBase
     [HttpPost("add_item")]
     public async Task<IActionResult> AddItem([FromBody] CreateItemRequest newItem)
     {
-        string sqlQuery = """
-                        SET XACT_ABORT ON;
-                        BEGIN TRANSACTION;
+        if (string.IsNullOrWhiteSpace(newItem.ItemName) ||
+            string.IsNullOrWhiteSpace(newItem.CategoryName))
+        {
+            return BadRequest("ItemName and CategoryName are required.");
+        }
 
-                        -- 1. Reject duplicate item names
-                        IF EXISTS (
-                            SELECT 1 FROM dbo.Item WITH (UPDLOCK, HOLDLOCK)
-                            WHERE ItemName = @ItemName
-                        )
-                        BEGIN
-                            ROLLBACK TRANSACTION;
-                            THROW 50001, 'An item with this name already exists.', 1;
-                        END
-
-                        -- 2. Find or create the category
-                        DECLARE @CategoryId INT;
-
-                        SELECT @CategoryId = CategoryId
-                        FROM dbo.Category WITH (UPDLOCK, HOLDLOCK)
-                        WHERE CategoryName = @CategoryName;
-
-                        IF @CategoryId IS NULL
-                        BEGIN
-                            INSERT INTO dbo.Category (CategoryName) VALUES (@CategoryName);
-                            SET @CategoryId = SCOPE_IDENTITY();
-                        END
-
-                        -- 3. Insert the item
-                        INSERT INTO dbo.Item (ItemName, Description, CategoryId)
-                        VALUES (@ItemName, @Description, @CategoryId);
-
-                        DECLARE @ItemId INT = SCOPE_IDENTITY();
-
-                        -- 4. Unpack the tag array (trimmed, blanks removed, duplicates removed)
-                        DECLARE @TagNames TABLE (
-                            TagName NVARCHAR(100) COLLATE DATABASE_DEFAULT PRIMARY KEY
-                        );
-
-                        INSERT INTO @TagNames (TagName)
-                        SELECT DISTINCT LTRIM(RTRIM([value]))
-                        FROM OPENJSON(@Tags)
-                        WHERE LTRIM(RTRIM([value])) <> '';
-
-                        -- 5. Create only the tags that don't exist yet
-                        INSERT INTO dbo.Tag (TagName)
-                        SELECT t.TagName
-                        FROM @TagNames t
-                        WHERE NOT EXISTS (
-                            SELECT 1 FROM dbo.Tag WITH (UPDLOCK, HOLDLOCK)
-                            WHERE TagName = t.TagName
-                        );
-
-                        -- 6. Link every tag (new or existing) to the new item
-                        INSERT INTO dbo.Item_Tag (ItemId, TagId)
-                        SELECT @ItemId, tg.TagId
-                        FROM dbo.Tag tg
-                        JOIN @TagNames t ON t.TagName = tg.TagName;
-
-                        COMMIT TRANSACTION;
-
-                        -- Result set 1: the item
-                        SELECT @ItemId AS ItemId,
-                            @ItemName AS ItemName,
-                            @Description AS Description,
-                            @CategoryId AS CategoryId;
-
-                        -- Result set 2: its tags
-                        SELECT tg.TagId, tg.TagName
-                        FROM dbo.Item_Tag it
-                        JOIN dbo.Tag tg ON tg.TagId = it.TagId
-                        WHERE it.ItemId = @ItemId;
-                        """;
         try
         {
-            var tagsJson = JsonSerializer.Serialize(newItem.ItemTags ?? new List<string>());
+            var item = await _items.CreateItemAsync(newItem);
 
-            await using var conn = new SqlConnection(_connectionString);
-            await using var cmd = new SqlCommand(sqlQuery, conn);
-
-            cmd.Parameters.AddWithValue("@ItemName", newItem.ItemName.Trim());
-            cmd.Parameters.AddWithValue("@Description", newItem.ItemDescription ?? string.Empty);
-            cmd.Parameters.AddWithValue("@CategoryName", newItem.CategoryName.Trim());
-            cmd.Parameters.Add("@Tags", SqlDbType.NVarChar, -1).Value = tagsJson;
-
-            await conn.OpenAsync();
-            await using var reader = await cmd.ExecuteReaderAsync();
-
-            if (!await reader.ReadAsync())
-            {
-                return StatusCode(500, "Item was not created.");
-            }
-
-            var item = new Item
-            {
-                ItemId = reader.GetInt32(reader.GetOrdinal("ItemId")),
-                ItemName = reader.GetString(reader.GetOrdinal("ItemName")),
-                Description = reader.GetString(reader.GetOrdinal("Description")),
-                CategoryId = reader.GetInt32(reader.GetOrdinal("CategoryId"))
-            };
-
-            // Move to the second result set (the tags)
-            if (await reader.NextResultAsync())
-            {
-                while (await reader.ReadAsync())
-                {
-                    item.Tags.Add(new ItemTag
-                    {
-                        TagId = reader.GetInt32(reader.GetOrdinal("TagId")),
-                        TagName = reader.GetString(reader.GetOrdinal("TagName"))
-                    });
-                }
-            }
-
-            return Created($"/api/items/{item.ItemId}", item);
+            return item is null
+                ? StatusCode(500, "Item was not created.")
+                : Created($"/api/items/{item.ItemId}", item);
         }
-        catch (SqlException ex) when (ex.Number == 50001)
+        catch (DuplicateItemException ex)
         {
-            return Conflict("An item with this name already exists.");
+            return Conflict(ex.Message);
         }
-        catch (Exception ex)
-        {
-            // Log the exception (ex) here as needed
-            return StatusCode(500, "An error occurred while creating the item.");  
-        }
+        // string sqlQuery = """
+        //                 SET XACT_ABORT ON;
+        //                 BEGIN TRANSACTION;
+
+        //                 -- 1. Reject duplicate item names
+        //                 IF EXISTS (
+        //                     SELECT 1 FROM dbo.Item WITH (UPDLOCK, HOLDLOCK)
+        //                     WHERE ItemName = @ItemName
+        //                 )
+        //                 BEGIN
+        //                     ROLLBACK TRANSACTION;
+        //                     THROW 50001, 'An item with this name already exists.', 1;
+        //                 END
+
+        //                 -- 2. Find or create the category
+        //                 DECLARE @CategoryId INT;
+
+        //                 SELECT @CategoryId = CategoryId
+        //                 FROM dbo.Category WITH (UPDLOCK, HOLDLOCK)
+        //                 WHERE CategoryName = @CategoryName;
+
+        //                 IF @CategoryId IS NULL
+        //                 BEGIN
+        //                     INSERT INTO dbo.Category (CategoryName) VALUES (@CategoryName);
+        //                     SET @CategoryId = SCOPE_IDENTITY();
+        //                 END
+
+        //                 -- 3. Insert the item
+        //                 INSERT INTO dbo.Item (ItemName, Description, CategoryId)
+        //                 VALUES (@ItemName, @Description, @CategoryId);
+
+        //                 DECLARE @ItemId INT = SCOPE_IDENTITY();
+
+        //                 -- 4. Unpack the tag array (trimmed, blanks removed, duplicates removed)
+        //                 DECLARE @TagNames TABLE (
+        //                     TagName NVARCHAR(100) COLLATE DATABASE_DEFAULT PRIMARY KEY
+        //                 );
+
+        //                 INSERT INTO @TagNames (TagName)
+        //                 SELECT DISTINCT LTRIM(RTRIM([value]))
+        //                 FROM OPENJSON(@Tags)
+        //                 WHERE LTRIM(RTRIM([value])) <> '';
+
+        //                 -- 5. Create only the tags that don't exist yet
+        //                 INSERT INTO dbo.Tag (TagName)
+        //                 SELECT t.TagName
+        //                 FROM @TagNames t
+        //                 WHERE NOT EXISTS (
+        //                     SELECT 1 FROM dbo.Tag WITH (UPDLOCK, HOLDLOCK)
+        //                     WHERE TagName = t.TagName
+        //                 );
+
+        //                 -- 6. Link every tag (new or existing) to the new item
+        //                 INSERT INTO dbo.Item_Tag (ItemId, TagId)
+        //                 SELECT @ItemId, tg.TagId
+        //                 FROM dbo.Tag tg
+        //                 JOIN @TagNames t ON t.TagName = tg.TagName;
+
+        //                 COMMIT TRANSACTION;
+
+        //                 -- Result set 1: the item
+        //                 SELECT @ItemId AS ItemId,
+        //                     @ItemName AS ItemName,
+        //                     @Description AS Description,
+        //                     @CategoryId AS CategoryId;
+
+        //                 -- Result set 2: its tags
+        //                 SELECT tg.TagId, tg.TagName
+        //                 FROM dbo.Item_Tag it
+        //                 JOIN dbo.Tag tg ON tg.TagId = it.TagId
+        //                 WHERE it.ItemId = @ItemId;
+        //                 """;
+        // try
+        // {
+        //     var tagsJson = JsonSerializer.Serialize(newItem.ItemTags ?? new List<string>());
+
+        //     await using var conn = new SqlConnection(_connectionString);
+        //     await using var cmd = new SqlCommand(sqlQuery, conn);
+
+        //     cmd.Parameters.AddWithValue("@ItemName", newItem.ItemName.Trim());
+        //     cmd.Parameters.AddWithValue("@Description", newItem.ItemDescription ?? string.Empty);
+        //     cmd.Parameters.AddWithValue("@CategoryName", newItem.CategoryName.Trim());
+        //     cmd.Parameters.Add("@Tags", SqlDbType.NVarChar, -1).Value = tagsJson;
+
+        //     await conn.OpenAsync();
+        //     await using var reader = await cmd.ExecuteReaderAsync();
+
+        //     if (!await reader.ReadAsync())
+        //     {
+        //         return StatusCode(500, "Item was not created.");
+        //     }
+
+        //     var item = new Item
+        //     {
+        //         ItemId = reader.GetInt32(reader.GetOrdinal("ItemId")),
+        //         ItemName = reader.GetString(reader.GetOrdinal("ItemName")),
+        //         Description = reader.GetString(reader.GetOrdinal("Description")),
+        //         CategoryId = reader.GetInt32(reader.GetOrdinal("CategoryId"))
+        //     };
+
+        //     // Move to the second result set (the tags)
+        //     if (await reader.NextResultAsync())
+        //     {
+        //         while (await reader.ReadAsync())
+        //         {
+        //             item.Tags.Add(new ItemTag
+        //             {
+        //                 TagId = reader.GetInt32(reader.GetOrdinal("TagId")),
+        //                 TagName = reader.GetString(reader.GetOrdinal("TagName"))
+        //             });
+        //         }
+        //     }
+
+        //     return Created($"/api/items/{item.ItemId}", item);
+        // }
+        // catch (SqlException ex) when (ex.Number == 50001)
+        // {
+        //     return Conflict("An item with this name already exists.");
+        // }
+        // catch (Exception ex)
+        // {
+        //     // Log the exception (ex) here as needed
+        //     return StatusCode(500, "An error occurred while creating the item.");  
+        // }
     }
     // [HttpPost("update_pizza/{pizzaName}/{toppings}/{pizzaId}")]
     // public JsonResult update_pizza(string pizzaName, string toppings, int pizzaId)

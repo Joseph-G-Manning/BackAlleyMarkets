@@ -12,7 +12,7 @@ function itemTagsArray(value) {
 const REQUIRED_FIELDS = [
   { name: "itemName", label: "Item Name" },
   { name: "itemDescription", label: "Item Description" },
-  { name: "itemCategory", label: "Item Category" },
+  { name: "categoryName", label: "Item Category" },
 ];
 
 const INITIAL_VALUES = {
@@ -76,9 +76,9 @@ const AddItem = () => {
     try {
       console.log("Item Name: ", values.itemName);
       console.log("Item Description: ", values.itemDescription);
-      console.log("Item Category: ", values.itemCategory);
+      console.log("Item Category: ", values.categoryName);
       console.log("Item Tags: ", values.itemTags);
-
+      
       const result = await addItem({
         ...Object.fromEntries(
           REQUIRED_FIELDS.map((f) => [f.name, values[f.name].trim()]),

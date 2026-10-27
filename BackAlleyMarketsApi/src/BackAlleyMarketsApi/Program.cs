@@ -37,6 +37,7 @@ builder.Services.AddControllersWithViews().AddNewtonsoftJson();
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
 
 var app = builder.Build();
 
