@@ -78,7 +78,7 @@ const AddItem = () => {
       console.log("Item Description: ", values.itemDescription);
       console.log("Item Category: ", values.categoryName);
       console.log("Item Tags: ", values.itemTags);
-      
+
       const result = await addItem({
         ...Object.fromEntries(
           REQUIRED_FIELDS.map((f) => [f.name, values[f.name].trim()]),
@@ -117,7 +117,7 @@ const AddItem = () => {
     return (
     <>
       <div className="card">
-        <h3>Add New Item</h3>
+        <h2>Add New Item</h2>
         <form onSubmit={handleItemSubmit} noValidate className="space-y-4">
           {REQUIRED_FIELDS.map(({ name, label }) => (
             <div key={name} className="flex flex-col gap-2 mb-4">
