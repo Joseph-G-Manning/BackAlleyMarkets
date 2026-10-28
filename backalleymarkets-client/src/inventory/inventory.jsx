@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from "react";
 import "./inventory.css";
-import { useParams, Link } from "react-router";
+import { useParams, Link, useNavigate } from "react-router";
 
 function Inventory() {
   const [items, setItems] = useState([]);
 
-//   const itemToPass = {
-//     itemName: '',
-//     itemId: null
-//   }
+  //   const itemToPass = {
+  //     itemName: '',
+  //     itemId: null
+  //   }
 
   let { itemId } = useParams();
+
+  let navigate = useNavigate();
+
+  const addItem = () => {
+    navigate("/addItem");
+  };
 
   useEffect(() => {
     const initGetItems = async () => {
@@ -48,10 +54,16 @@ function Inventory() {
     <>
       <div className="card">
         <button
-          className="bg-indigo-500 hover:bg-fuchsia-500"
+          className="bg-sky-500"
           onClick={() => getItems()}
         >
           Click for Items
+        </button>
+        <button
+          className="bg-indigo-500 hover:bg-fuchsia-500"
+          onClick={addItem}
+        >
+          Add New Item
         </button>
         <div className="grid grid-cols-4 gap-4">
           {items.map((item) => (

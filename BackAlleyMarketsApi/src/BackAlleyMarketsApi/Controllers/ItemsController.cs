@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Any;
 using Microsoft.AspNetCore.Http.HttpResults;
 using BackAlleyMarketsApi.Models;
+using System.Text.Json;
 
 namespace BackAlleyMarketsApi.Controllers;
 
@@ -13,33 +14,19 @@ namespace BackAlleyMarketsApi.Controllers;
 [ApiController]
 public class ItemsController : ControllerBase
 {
-
+    private readonly string _connectionString;
     private IConfiguration _configuration;
-    public ItemsController(IConfiguration configuration)
+    private readonly IItemRepository _items;
+
+    public ItemsController(IConfiguration configuration, IItemRepository items)
     {
         _configuration = configuration;
+        _items = items;
+        _connectionString = _configuration.GetConnectionString("BackAlleyMarkets")
+            ?? throw new InvalidOperationException("Missing connection string.");
     }
 
     [HttpGet]
-    // public JsonResult GetItems()
-    // {
-    //     string query = "SELECT ItemId, ItemName, Description, Item.CategoryId, CategoryName FROM Item LEFT JOIN Category ON Item.CategoryId = Category.CategoryId;";
-    //     DataTable table = new DataTable();
-    //     string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
-    //     SqlDataReader myReader;
-    //     using (SqlConnection myCon = new SqlConnection(SqlDatasource))
-    //     {
-    //         myCon.Open();
-    //         using (SqlCommand myCommand = new SqlCommand(query, myCon))
-    //         {
-    //             myReader = myCommand.ExecuteReader();
-    //             table.Load(myReader);
-    //         }
-    //     }
-
-    //     return new JsonResult(table);
-    // }
-
     public List<Item> GetItems()
     {
         string? connectionString = _configuration.GetConnectionString("BackAlleyMarkets");
@@ -55,15 +42,12 @@ public class ItemsController : ControllerBase
             List<ItemTag> tempTagList = new List<ItemTag>();
             while (readerTag.Read())
             {
-                // if (readerTag.GetInt32(1) == item.ItemId)
-                // {
                 ItemTag itemTag = new ItemTag();
                 itemTag.ItemTagId = readerTag.GetInt32(0);
                 itemTag.ItemId = readerTag.GetInt32(1);
                 itemTag.TagId = readerTag.GetInt32(2);
                 itemTag.TagName = readerTag.GetString(3);
                 tempTagList.Add(itemTag);
-                // }
             }
             readerTag.Close();
 
@@ -83,18 +67,6 @@ public class ItemsController : ControllerBase
                         item.Tags.Add(tag);
                     }
                 }
-                // while (readerTag.Read())
-                // {
-                //     if (readerTag.GetInt32(1) == item.ItemId)
-                //     {
-                //         ItemTag itemTag = new ItemTag();
-                //         itemTag.ItemTagId = readerTag.GetInt32(0);
-                //         itemTag.ItemId = readerTag.GetInt32(1);
-                //         itemTag.TagId = readerTag.GetInt32(2);
-                //         itemTag.TagName = readerTag.GetString(3);
-                //         item.Tags.Add(itemTag);
-                //     }
-                // }
                 items.Add(item);
             }
 
@@ -110,9 +82,9 @@ public class ItemsController : ControllerBase
     {
         string query = "select ItemId, ItemName, Description, Item.CategoryId, CategoryName from Item LEFT JOIN Category ON Item.CategoryId = Category.CategoryId WHERE ItemId=" + id;
         DataTable table = new DataTable();
-        string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
+        string? connectionString = _configuration.GetConnectionString("BackAlleyMarkets");
         SqlDataReader myReader;
-        using (SqlConnection myCon = new SqlConnection(SqlDatasource))
+        using (SqlConnection myCon = new SqlConnection(connectionString))
         {
             myCon.Open();
             using (SqlCommand myCommand = new SqlCommand(query, myCon))
@@ -125,85 +97,26 @@ public class ItemsController : ControllerBase
         return new JsonResult(table);
     }
 
-    // [HttpGet("get_items")]
-    // public JsonResult get_items()
-    // {
-    //     string query = "select * from Item";
-    //     DataTable table = new DataTable();
-    //     string? SqlDatasource = _configuration.GetConnectionString("BackAlleyMarkets");
-    //     SqlDataReader myReader;
-    //     using (SqlConnection myCon = new SqlConnection(SqlDatasource))
-    //     {
-    //         myCon.Open();
-    //         using (SqlCommand myCommand = new SqlCommand(query, myCon))
-    //         {
-    //             myReader = myCommand.ExecuteReader();
-    //             table.Load(myReader);
-    //         }
-    //     }
+    [HttpPost("add_item")]
+    public async Task<IActionResult> AddItem([FromBody] CreateItemRequest newItem)
+    {
+        if (string.IsNullOrWhiteSpace(newItem.ItemName) ||
+            string.IsNullOrWhiteSpace(newItem.CategoryName))
+        {
+            return BadRequest("ItemName and CategoryName are required.");
+        }
 
-    //     return new JsonResult(table);
-    // }
+        try
+        {
+            var item = await _items.CreateItemAsync(newItem);
 
-    // [HttpPost("add_pizza/{pizzaName}/{toppings}")]
-    // public JsonResult add_pizza(string pizzaName, string toppings)
-    // {
-    //     string query = "INSERT INTO Pizzas VALUES ('" + toppings + "', '" + pizzaName + "')";
-    //     DataTable table = new DataTable();
-    //     string SqlDatasource = _configuration.GetConnectionString("Pizza_Shop");
-    //     SqlDataReader myReader;
-    //     using (SqlConnection myCon = new SqlConnection(SqlDatasource))
-    //     {
-    //         myCon.Open();
-    //         using (SqlCommand myCommand = new SqlCommand(query, myCon))
-    //         {
-    //             myReader = myCommand.ExecuteReader();
-    //             table.Load(myReader);
-    //         }
-    //     }
-
-    //     return new JsonResult("Added Successfully");
-    // }
-
-    // [HttpPost("update_pizza/{pizzaName}/{toppings}/{pizzaId}")]
-    // public JsonResult update_pizza(string pizzaName, string toppings, int pizzaId)
-    // {
-    //     string query = "UPDATE Pizzas SET PizzaName = '" + pizzaName + "', Toppings = '" + toppings + "' WHERE PizzaID = " + pizzaId;
-    //     DataTable table = new DataTable();
-    //     string SqlDatasource = _configuration.GetConnectionString("Pizza_Shop");
-    //     SqlDataReader myReader;
-    //     using (SqlConnection myCon = new SqlConnection(SqlDatasource))
-    //     {
-    //         myCon.Open();
-    //         using (SqlCommand myCommand = new SqlCommand(query, myCon))
-    //         {
-    //             myReader = myCommand.ExecuteReader();
-    //             table.Load(myReader);
-    //         }
-    //     }
-
-    //     return new JsonResult("Updated Successfully");
-    // }
-
-    // [HttpDelete("delete_pizza/{pizzaId}")]
-    // public JsonResult delete_pizza(int pizzaId)
-    // {
-    //     string query = "DELETE FROM Pizzas WHERE PizzaId = '" + pizzaId + "'";
-    //     DataTable table = new DataTable();
-    //     string SqlDatasource = _configuration.GetConnectionString("Pizza_Shop");
-    //     SqlDataReader myReader;
-    //     using (SqlConnection myCon = new SqlConnection(SqlDatasource))
-    //     {
-    //         myCon.Open();
-    //         using (SqlCommand myCommand = new SqlCommand(query, myCon))
-    //         {
-    //             myReader = myCommand.ExecuteReader();
-    //             table.Load(myReader);
-    //         }
-    //     }
-
-    //     return new JsonResult("Deleted Successfully");
-    // }
-
-
+            return item is null
+                ? StatusCode(500, "Item was not created.")
+                : Created($"/api/items/{item.ItemId}", item);
+        }
+        catch (DuplicateItemException ex)
+        {
+            return Conflict(ex.Message);
+        }
+    }
 }
