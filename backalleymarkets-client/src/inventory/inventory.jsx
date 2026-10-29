@@ -53,31 +53,34 @@ function Inventory() {
 
   return (
     <>
-      <div className="card">
-        <button className="bg-sky-500" onClick={() => getItems()}>
-          Click for Items
-        </button>
-        <button
-          className="bg-indigo-500 hover:bg-fuchsia-500"
-          onClick={addItem}
-        >
-          Add New Item
-        </button>
+      <div className="card grid gap-4">
+        <div className="grid grid-cols-2 gap-4">
+          <button className="bg-sky-500" onClick={() => getItems()}>
+            Click for Items
+          </button>
+          <button
+            className="bg-indigo-500 hover:bg-fuchsia-500"
+            onClick={addItem}
+          >
+            Add New Item
+          </button>
+        </div>
         <div className="grid gap-4">
           {items.map((item) => (
-            <div key={item.itemId} >
-              <Link key={item.itemId} to={"/items/" + item.itemId} state={item} className="grid grid-cols-3 grid-rows-3 gap-4">
+            <div key={item.itemId}>
+              <Link
+                key={item.itemId}
+                to={"/items/" + item.itemId}
+                state={item}
+                className="grid grid-cols-3 grid-rows-3 gap-4 border-2 border-stone-500 p-2 rounded-md shadow-md"
+              >
                 <img
                   src={marketImage}
                   alt="Open market with stalls."
                   className="row-span-3"
                 />
-                <div className="col-span-2">
-                  {item.itemName}
-                </div>
-                <div className="col-span-2 row-span-2">
-                  {item.description}
-                </div>
+                <div className="col-span-2 text-left">{item.itemName}</div>
+                <div className="col-span-2 row-span-2 text-left">{item.description}</div>
               </Link>
             </div>
           ))}
