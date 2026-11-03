@@ -4,6 +4,7 @@ import "./App.css";
 import Inventory from "./inventory/inventory";
 import ItemDetail from "./itemDetail/itemDetail";
 import AddItem from "./itemManagement/addItem/addItem";
+import Footer from "./layoutComponents/footer/footer";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
             <Route path="/addItem" element={<AddItem />} />
           </Routes>
         </div>
+        <Footer />
       </Router>
     </>
   );
