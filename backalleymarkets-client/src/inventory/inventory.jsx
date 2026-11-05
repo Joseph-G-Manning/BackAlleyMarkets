@@ -7,6 +7,7 @@ function Inventory() {
   const [items, setItems] = useState([]);
   const itemRefs = useRef([]); // one ref per item
   const [activeId, setActiveId] = useState(null);
+  // const [pausedId, setPausedId] = useState(null);
 
   //   const itemToPass = {
   //     itemName: '',
@@ -20,6 +21,27 @@ function Inventory() {
   const addItem = () => {
     navigate("/addItem");
   };
+
+  // PLACEHOLDER: This is a placeholder for the pausedId state, which is used to track the last activeId that was processed. 
+  // It is used to prevent the timer from being reset if the same activeId is encountered again.
+  // Will be used for a future feature that will pause the timer when the user scrolls away from the active item, 
+  // and resume it when they scroll back to it.  
+  const pausedIdRef = useRef(null);
+
+  useEffect(() => {
+    if (activeId === pausedIdRef.current) return;
+
+    pausedIdRef.current = activeId;
+
+    const timeoutId = setTimeout(() => {
+      console.log("timer reached 5 seconds for activeId:", activeId);
+    }, 5000);
+
+    console.log("Setting pausedId to activeId:", activeId);
+
+    // cleanup: stops the timer on unmount or if `value` changes again
+    return () => clearTimeout(timeoutId);
+  }, [activeId]);
 
   useEffect(() => {
     const initGetItems = async () => {
@@ -71,6 +93,7 @@ function Inventory() {
     };
 
     findClosest(); // run once on mount / when items change
+
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
