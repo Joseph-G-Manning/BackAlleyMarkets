@@ -24,7 +24,7 @@ function Inventory() {
 
   // PLACEHOLDER: This is a placeholder for the pausedId state, which is used to track the last activeId that was processed. 
   // It is used to prevent the timer from being reset if the same activeId is encountered again.
-  // Will be used for a future feature that will pause the timer when the user scrolls away from the active item, 
+  // Will be used for a future feature that will reset the timer when the user scrolls away from the active item, 
   // and resume it when they scroll back to it.  
   const pausedIdRef = useRef(null);
 
