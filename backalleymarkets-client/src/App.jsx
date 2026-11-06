@@ -4,12 +4,14 @@ import "./App.css";
 import Inventory from "./inventory/inventory";
 import ItemDetail from "./itemDetail/itemDetail";
 import AddItem from "./itemManagement/addItem/addItem";
+import Footer from "./layoutComponents/footer/footer";
+import Header from "./layoutComponents/header/header";
 
 function App() {
   return (
     <>
       <Router>
-        <h1>Back Alley Markets</h1>
+        <Header />
         <div className="container">
           <Routes>
             <Route index element={<Inventory />} />
@@ -17,6 +19,7 @@ function App() {
             <Route path="/addItem" element={<AddItem />} />
           </Routes>
         </div>
+        <Footer />
       </Router>
     </>
   );
