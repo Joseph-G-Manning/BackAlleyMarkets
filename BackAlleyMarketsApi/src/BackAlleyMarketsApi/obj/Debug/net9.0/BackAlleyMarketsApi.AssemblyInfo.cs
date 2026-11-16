@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BackAlleyMarketsApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+77aeec38dbce31dc4367c1b668f7f770c8ca3294")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+00bface88fe138fbe6d189b4e9e18fb0ae29a8f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("BackAlleyMarketsApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BackAlleyMarketsApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
