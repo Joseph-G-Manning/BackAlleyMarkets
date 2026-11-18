@@ -36,7 +36,7 @@ const inputClasses = (hasError) =>
   ].join(" ");
 
 export default function CreateUserProfileForm({
-  endpoint = "/api/user-profile",
+  endpoint = "http://localhost:5142/api/user-profile",
   onSuccess,
 }) {
   const [values, setValues] = useState(initialValues);
@@ -234,7 +234,7 @@ export default function CreateUserProfileForm({
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full rounded-md bg-indigo-600 px-4 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-6"
+          className="mt-6 w-full rounded-md bg-indigo-600 px-4 py-2.5 font-medium shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-6"
         >
           {submitting ? "Creating profile…" : "Create profile"}
         </button>
